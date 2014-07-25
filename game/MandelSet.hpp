@@ -2,9 +2,9 @@
 
 #include "lumina/lumina.hpp"
 
-class Game {
+class MandelSet {
 public:
-  Game();
+  MandelSet();
 
   void init();
   void start();

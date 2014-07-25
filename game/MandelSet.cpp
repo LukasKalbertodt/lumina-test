@@ -1,4 +1,4 @@
-#include "Game.hpp"
+#include "MandelSet.hpp"
 
 #include <functional>
 #include <chrono>
@@ -6,27 +6,27 @@
 using namespace lumina;
 using namespace std;
 
-Game::Game() : m_running(true), m_steps(4), m_showAxis(true), m_antiAlias(true),
+MandelSet::MandelSet() : m_running(true), m_steps(4), m_showAxis(true), m_antiAlias(true),
 m_scale(1.6f), m_offset(-0.5f, 0.f) {} 
 
 
-void Game::init() {
+void MandelSet::init() {
   // configure window
-  m_window.setTitle("Test Game for lumina-0.1");
+  m_window.setTitle("Test MandelSet for lumina-0.1");
   m_window.setVersionHint(3, 3);
-  m_window.addEventCallback(bind(&Game::onEvent, this, placeholders::_1));
+  m_window.addEventCallback(bind(&MandelSet::onEvent, this, placeholders::_1));
   m_window.resize(Vec2i(1024, 756));
 }
 
-void Game::start() {
+void MandelSet::start() {
   m_window.open();
 
   auto& renderContext = m_window.getRenderContext();
   renderContext.create();
-  renderContext.prime(bind(&Game::run, this, placeholders::_1));
+  renderContext.prime(bind(&MandelSet::run, this, placeholders::_1));
 }
 
-void Game::run(HotRenderContext& hotContext) {
+void MandelSet::run(HotRenderContext& hotContext) {
   VertexSeq quad;
   quad.create(2, 4);
   quad.prime<Vec2f>([](HotVertexSeq<Vec2f>& hot){
@@ -85,7 +85,7 @@ void Game::run(HotRenderContext& hotContext) {
   }
 }
 
-lumina::EventResult Game::onEvent(InputEvent e) {
+lumina::EventResult MandelSet::onEvent(InputEvent e) {
   if(e.type == InputType::Key) {
     if(e.keyInput.type == KeyInputType::Pressed || 
        e.keyInput.type == KeyInputType::Hold) {
