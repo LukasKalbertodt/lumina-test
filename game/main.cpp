@@ -1,8 +1,9 @@
 #include "lumina/lumina.hpp"
+#include "Game.hpp"
 // using namespace lumina;
 
 int main() {
-  lumina::Window win("Test Game");
-  win.setVersionHint(3, 3);
-  win.open();
+  Game game;
+  game.init();
+  game.start();
 }
