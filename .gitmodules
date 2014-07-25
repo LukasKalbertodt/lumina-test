@@ -1,0 +1,3 @@
+[submodule "lumina"]
+	path = lumina
+	url = git@github.com:LukasKalbertodt/lumina.git
