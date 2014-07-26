@@ -1,0 +1,1 @@
+cd lumina && git pull local release-0.1 && make clean && make -j8 && cd .. && ./build.sh

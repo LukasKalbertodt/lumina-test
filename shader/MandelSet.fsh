@@ -30,7 +30,7 @@ int isInSet(vec2 cdot, int steps) {
  
 void main(){
   if(u_showAxis) {
-    if(int((id.pos.x / u_scale) * 0.5 * u_winSize.x + 1) == 1 || 
+    if(int((id.pos.x / u_scale) * 0.5 * u_winSize.y + 1) == 1 || 
        int((id.pos.y / u_scale) * 0.5 * u_winSize.y + 1) == 1) {
       o_color = vec4(0,0.4,1,1);
       return;

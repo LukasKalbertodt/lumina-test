@@ -19,14 +19,22 @@ void MandelSet::init() {
 }
 
 void MandelSet::start() {
+  // open the window (we need to call init before!)
   m_window.open();
 
+  // obtain render context
   auto& renderContext = m_window.getRenderContext();
   renderContext.create();
-  renderContext.prime(bind(&MandelSet::run, this, placeholders::_1));
+
+  // we just need one context and the default FB, so we can prime them here
+  renderContext.prime([this](HotRenderContext& hotContext) {
+    hotContext.getDefaultFrameBuffer().prime([&](HotFrameBuffer& hotFB) {
+      run(hotContext, hotFB);
+    });
+  });
 }
 
-void MandelSet::run(HotRenderContext& hotContext) {
+void MandelSet::run(HotRenderContext& hotContext, HotFrameBuffer& hotFB) {
   VertexSeq quad;
   quad.create(2, 4);
   quad.prime<Vec2f>([](HotVertexSeq<Vec2f>& hot){
@@ -58,18 +66,16 @@ void MandelSet::run(HotRenderContext& hotContext) {
     now = chrono::system_clock::now();
 
     
-    hotContext.getDefaultFrameBuffer().prime([&](HotFrameBuffer& hotFB) {
-      p.prime([&](HotProgram& hot) {
-        hot.uniform["u_winSize"] = winSize;
-        hot.uniform["u_steps"] = m_steps;
-        hot.uniform["u_showAxis"] = m_showAxis;
-        hot.uniform["u_antiAlias"] = m_antiAlias;
-        hot.uniform["u_scale"] = m_scale;
-        hot.uniform["u_offset"] = m_offset;
-        TexCont cont;
-        cont.prime([&](HotTexCont& hotCont) {
-          hot.draw(hotCont, quad, PrimitiveType::TriangleStrip);
-        });
+    p.prime([&](HotProgram& hot) {
+      hot.uniform["u_winSize"] = winSize;
+      hot.uniform["u_steps"] = m_steps;
+      hot.uniform["u_showAxis"] = m_showAxis;
+      hot.uniform["u_antiAlias"] = m_antiAlias;
+      hot.uniform["u_scale"] = m_scale;
+      hot.uniform["u_offset"] = m_offset;
+      TexCont cont;
+      cont.prime([&](HotTexCont& hotCont) {
+        hot.draw(hotCont, quad, PrimitiveType::TriangleStrip);
       });
     });
 

@@ -18,7 +18,7 @@ private:
   float m_scale;
   lumina::Vec2f m_offset;
 
-  void run(lumina::HotRenderContext&);
+  void run(lumina::HotRenderContext&, lumina::HotFrameBuffer&);
 
   lumina::EventResult onEvent(lumina::InputEvent e);
 };
