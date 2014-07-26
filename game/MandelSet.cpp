@@ -6,8 +6,13 @@
 using namespace lumina;
 using namespace std;
 
-MandelSet::MandelSet() : m_running(true), m_steps(4), m_showAxis(true), m_antiAlias(true),
-m_scale(1.6f), m_offset(-0.5f, 0.f) {} 
+MandelSet::MandelSet() 
+  : m_running(true), 
+    m_steps(4), 
+    m_showAxis(true), 
+    m_antiAlias(true),
+    m_scale(1.6f), 
+    m_offset(-0.5f, 0.f) {} 
 
 
 void MandelSet::init() {
@@ -35,8 +40,9 @@ void MandelSet::start() {
 }
 
 void MandelSet::run(HotRenderContext& hotContext, HotFrameBuffer& hotFB) {
+  // create VertexSeq that represents a quad
   VertexSeq quad;
-  quad.create(2, 4);
+  quad.create(2, 4);  // 2 floats, 4 vertices
   quad.prime<Vec2f>([](HotVertexSeq<Vec2f>& hot){
     hot.vertex[0] = Vec2f( 1, -1);
     hot.vertex[1] = Vec2f(-1, -1);
@@ -46,108 +52,111 @@ void MandelSet::run(HotRenderContext& hotContext, HotFrameBuffer& hotFB) {
     hot.applyVertexLayout();
   });
 
+
+  // load and compile vertex and fragment shader
   VShader vs;
   vs.compile(loadShaderFromFile("shader/MandelSet.vsh"));
   FShader fs;
   fs.compile(loadShaderFromFile("shader/MandelSet.fsh"));
 
+  // create program and link the two shaders
   Program p;
   p.create(vs, fs);
 
+
+  // save window size as float -> need that for a uniform variable
   Vec2f winSize = vector_cast<float>(m_window.getSize());
 
-  // measure time
-  auto now = chrono::system_clock::now();
-  int count = 1;
 
+  // run as long as the window is valid and the user hasn't pessed ESC
   while(m_running && m_window.isValid()) {
+    // poll events
     m_window.update();
-
-    now = chrono::system_clock::now();
-
     
+    // prime program to use it
     p.prime([&](HotProgram& hot) {
+      // set all needed uniform variables
       hot.uniform["u_winSize"] = winSize;
       hot.uniform["u_steps"] = m_steps;
       hot.uniform["u_showAxis"] = m_showAxis;
       hot.uniform["u_antiAlias"] = m_antiAlias;
       hot.uniform["u_scale"] = m_scale;
       hot.uniform["u_offset"] = m_offset;
-      TexCont cont;
-      cont.prime([&](HotTexCont& hotCont) {
-        hot.draw(hotCont, quad, PrimitiveType::TriangleStrip);
-      });
+
+      // draw the quad
+      hot.draw(quad, PrimitiveType::TriangleStrip);
     });
 
-    auto diff = chrono::system_clock::now() - now;
-    float sec = chrono::duration_cast<chrono::milliseconds>(diff).count() / 1000.f;
-
-    if(count++ % 50 == 0) {
-      slog(" time: ", sec, " \tfps: ", 1/sec, " \t steps: ", m_steps);
-    }
-
-
+    // swap buffer
     hotContext.swapBuffer();
   }
 }
 
 lumina::EventResult MandelSet::onEvent(InputEvent e) {
-  if(e.type == InputType::Key) {
-    if(e.keyInput.type == KeyInputType::Pressed || 
-       e.keyInput.type == KeyInputType::Hold) {
-      if(e.keyInput.key == KeyCode::Escape) {
-        m_running = false;
-        return EventResult::Processed;
-      }
-      if(e.keyInput.key == KeyCode::Right) {
-        m_steps++;
-        return EventResult::Processed;
-      }
-      if(e.keyInput.key == KeyCode::Left) {
-        m_steps--;
-        if(m_steps < 1) {
-          m_steps = 1;
-        }
-        return EventResult::Processed;
-      }
-      if(e.keyInput.key == KeyCode::Space) {
-        m_showAxis = !m_showAxis;
-        return EventResult::Processed;
-      }
-      if(e.keyInput.key == KeyCode::F) {
-        m_antiAlias = !m_antiAlias;
-        return EventResult::Processed;
-      }
-      if(e.keyInput.key == KeyCode::Add) {
-        m_scale *= 0.8f;
-        return EventResult::Processed;
-      }
-      if(e.keyInput.key == KeyCode::Subtract) {
-        m_scale /= 0.8f;
-        return EventResult::Processed;
-      }
-
-      if(e.keyInput.key == KeyCode::W) {
-        m_offset.y += 0.07 * m_scale;
-        return EventResult::Processed;
-      }
-      if(e.keyInput.key == KeyCode::S) {
-        m_offset.y -= 0.07 * m_scale;
-        return EventResult::Processed;
-      }
-      if(e.keyInput.key == KeyCode::A) {
-        m_offset.x -= 0.07 * m_scale;
-        return EventResult::Processed;
-      }
-      if(e.keyInput.key == KeyCode::D) {
-        m_offset.x += 0.07 * m_scale;
-        return EventResult::Processed;
-      }
-    }
-  }
-  else if(e.type == InputType::Mouse) {
-
+  // we just need key event
+  if(e.type != InputType::Key) {
+    return EventResult::Skipped;
   }
 
-  return EventResult::Skipped;
+  // we just need key events when a key is pressed or hold
+  auto type = e.keyInput.type;
+  if(!(type == KeyInputType::Pressed || type == KeyInputType::Hold)) {
+    return EventResult::Skipped;
+  }
+
+  switch(e.keyInput.key) {
+    // exit application
+    case KeyCode::Escape:
+      m_running = false;
+      break;
+
+    // increase or decrease number of steps
+    case KeyCode::Right:
+      m_steps++;
+      slog(" steps: ", m_steps);
+      break;
+    case KeyCode::Left:
+      m_steps--;
+      if(m_steps < 1) {
+        m_steps = 1;
+      }
+      slog(" steps: ", m_steps);
+      break;
+
+    // toggle axis or anti aliasing
+    case KeyCode::Space:
+      m_showAxis = !m_showAxis;
+      break;
+    case KeyCode::F:
+      m_antiAlias = !m_antiAlias;
+      break;
+
+    // zoom in or out
+    case KeyCode::Add:
+      m_scale *= 0.8f;
+      break;
+    case KeyCode::Subtract:
+      m_scale /= 0.8f;
+      break;
+
+    // move
+    case KeyCode::W:
+      m_offset.y += 0.07 * m_scale;
+      break;
+    case KeyCode::S:
+      m_offset.y -= 0.07 * m_scale;
+      break;
+    case KeyCode::A:
+      m_offset.x -= 0.07 * m_scale;
+      break;
+    case KeyCode::D:
+      m_offset.x += 0.07 * m_scale;
+      break;
+
+    // other keys don't matter
+    default:
+      return EventResult::Skipped;
+  }
+
+  return EventResult::Processed;
 }
