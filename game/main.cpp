@@ -1,5 +1,6 @@
 #include "lumina/lumina.hpp"
 #include "MandelSet.hpp"
+#include "GameOfLife.hpp"
 
 #include <iostream>
 using namespace std;
@@ -23,6 +24,9 @@ int main(int argc, char **argv) {
       }
     case '2':
       {
+        GameOfLife gol;
+        gol.init();
+        gol.start();
         break;
       }
     default:

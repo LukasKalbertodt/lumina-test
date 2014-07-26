@@ -17,7 +17,7 @@ MandelSet::MandelSet()
 
 void MandelSet::init() {
   // configure window
-  m_window.setTitle("Test MandelSet for lumina-0.1");
+  m_window.setTitle("Mandelbrot Set Test for lumina-0.1");
   m_window.setVersionHint(3, 3);
   m_window.addEventCallback(bind(&MandelSet::onEvent, this, placeholders::_1));
   m_window.resize(Vec2i(1024, 756));
